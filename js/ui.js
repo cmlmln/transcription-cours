@@ -19,7 +19,7 @@ const STALE_MS = 30000;
 const LOG = [];
 let logDirty = false;
 function log(type, data = {}) {
-  const { t, ...rest } = data;
+  const { t, type: _ignored, ...rest } = data; // le type passé en argument prime (préfixe « test: »)
   LOG.push({ t: Date.now(), type, ...rest });
   if (LOG.length > 200) LOG.shift();
   if (!$('#sheet-diag').hidden && !logDirty) { logDirty = true; requestAnimationFrame(renderDiag); }
@@ -135,6 +135,7 @@ function fatalMessage(f) {
     return 'Reconnaissance vocale indisponible ici. Sur iPad : Safari à jour (iPadOS 17 ou plus). Si l’app est ouverte depuis l’écran d’accueil, essaie dans un onglet Safari.';
   }
   if (!f.fromGesture) return 'iOS a refusé la relance automatique. Touche « Démarrer » pour reprendre (le texte est conservé).';
+  if (!IS_IOS) return 'Micro refusé. Dans Chrome : clique sur l’icône à gauche de l’adresse › Microphone → « Autoriser », puis recharge la page. Vérifie aussi qu’un micro est branché et autorisé pour le navigateur dans les réglages du système.';
   return 'Micro refusé. Sur iPad : Réglages › Safari › Microphone → « Autoriser », puis recharge la page. '
     + 'Vérifie aussi que la Dictée est activée (Réglages › Général › Clavier).';
 }

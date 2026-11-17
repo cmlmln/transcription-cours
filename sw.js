@@ -1,7 +1,7 @@
 // Service worker : met en cache uniquement le shell de l'app (aucun texte, aucun son).
 // index.html en network-first pour que les mises à jour arrivent ; le reste en cache-first,
 // versionné : changer VERSION (ici et dans js/version.js) renouvelle tout le cache.
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const CACHE = 'transcription-' + VERSION;
 const SHELL = [
   './',
