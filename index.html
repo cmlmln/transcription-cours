@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- Aucune requête hors de l'origine : bloqué par le navigateur lui-même. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#0b0d10">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Transcription">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/app.css">
+<title>Transcription de cours</title>
+<script type="module" src="js/ui.js"></script>
+</head>
+<body>
+<header id="top">
+  <div id="status" class="pill red" role="status" aria-live="polite"><span class="dot"></span><span id="status-label">Arrêté</span></div>
+  <div id="meta">
+    <span id="last-ago">—</span>
+    <span id="chrono">00:00:00</span>
+    <span id="restarts">0 relance</span>
+    <span id="words">0 mot</span>
+  </div>
+  <input id="title" type="text" placeholder="Titre du cours" aria-label="Titre du cours" autocomplete="off" disabled>
+</header>
+
+<div id="banners"></div>
+
+<main id="scroller">
+  <div id="transcript" spellcheck="false"><span id="interim"></span></div>
+  <p id="empty">Touchez « Démarrer » pour lancer la transcription.</p>
+</main>
+<button id="live" class="chip" hidden>↓ Revenir au direct</button>
+
+<footer id="controls">
+  <div class="main">
+    <button id="btn-start" class="big go">Démarrer</button>
+    <button id="btn-pause" class="big warn" disabled>Pause</button>
+    <button id="btn-stop" class="big danger" disabled>Arrêter</button>
+  </div>
+  <div class="tools">
+    <button id="font-minus" aria-label="Texte plus petit">A−</button>
+    <button id="font-plus" aria-label="Texte plus grand">A+</button>
+    <button id="btn-edit" disabled>Modifier</button>
+    <button id="btn-export">Exporter</button>
+    <button id="btn-history">Historique</button>
+    <button id="btn-settings">Réglages</button>
+    <button id="btn-diag">Diagnostic</button>
+  </div>
+</footer>
+
+<section class="sheet" id="sheet-export" hidden aria-label="Exporter">
+  <div class="sheet-head"><h2>Exporter</h2><button class="close">Fermer</button></div>
+  <p id="export-target" class="muted"></p>
+  <div class="grid">
+    <button data-exp="copy">Copier tout</button>
+    <button data-exp="copy-plain">Copier le texte nu</button>
+    <button data-exp="share">Partager…</button>
+    <button data-exp="txt">Télécharger .txt</button>
+    <button data-exp="md">Télécharger .md</button>
+    <button data-exp="plain">Texte nu .txt</button>
+  </div>
+  <label class="row"><input type="checkbox" id="opt-clean"> Nettoyer (majuscule après un point, doubles espaces)</label>
+  <p class="muted">« Texte nu » : sans titre ni horodatage, à coller tel quel dans une IA pour en faire une fiche. Le glossaire de corrections est appliqué à tous les exports.</p>
+</section>
+
+<section class="sheet" id="sheet-history" hidden aria-label="Historique">
+  <div class="sheet-head"><h2>Historique</h2><button class="close">Fermer</button></div>
+  <ul id="history-list"></ul>
+</section>
+
+<section class="sheet" id="sheet-settings" hidden aria-label="Réglages">
+  <div class="sheet-head"><h2>Réglages</h2><button class="close">Fermer</button></div>
+  <p class="note">La reconnaissance vocale de Safari passe par les serveurs d'Apple : <strong>il faut internet</strong>, même installée sur l'écran d'accueil.</p>
+  <h3>Glossaire de corrections</h3>
+  <p class="muted">Une règle par ligne : <code>mal reconnu → correct</code>. Appliqué à l'affichage et à l'export ; le texte brut enregistré n'est jamais modifié.</p>
+  <textarea id="opt-glossary" rows="6" spellcheck="false" autocapitalize="off"></textarea>
+  <h3>Réglages avancés</h3>
+  <label class="row">Mode continu
+    <select id="opt-continuous">
+      <option value="auto">Auto (désactivé sur iPad, activé sur ordinateur)</option>
+      <option value="off">Désactivé (relance après chaque phrase)</option>
+      <option value="on">Activé</option>
+    </select>
+  </label>
+  <label class="row">Chien de garde : relance après <input id="opt-watchdog" type="number" min="5" max="60" step="1" inputmode="numeric"> s sans aucun événement</label>
+  <label class="row"><input type="checkbox" id="opt-video"> Expérimental : vidéo muette pour empêcher la veille (peut perturber le micro sur iOS, à n'utiliser que si le Wake Lock ne marche pas)</label>
+  <p class="muted" id="persist-status"></p>
+  <p class="muted">Version <span id="version"></span></p>
+</section>
+
+<section class="sheet" id="sheet-diag" hidden aria-label="Diagnostic">
+  <div class="sheet-head"><h2>Diagnostic</h2><button class="close">Fermer</button></div>
+  <div class="grid">
+    <button id="btn-test">Test 30 s</button>
+    <button id="btn-copy-log">Copier le journal</button>
+  </div>
+  <div id="test-result" class="note" hidden></div>
+  <table id="diag-table"></table>
+  <h3>Journal (200 derniers événements)</h3>
+  <pre id="diag-log"></pre>
+</section>
+</body>
+</html>
